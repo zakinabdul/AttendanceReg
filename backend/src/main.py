@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .db.base import Base, get_engine    
-from .api.routers import api_router
+from .api.v1.routers import api_router
 
 #lifespan event handler
 @asynccontextmanager
@@ -17,6 +17,7 @@ app=FastAPI(
     title="Attendance Reg",
     description="Backend service for attendance register full stack web app",
     lifespan=lifespan,
+    version="1.0.0"
 )
 origins = [
     "http://localhost:3000",
@@ -39,7 +40,7 @@ app.add_middleware(
 def message():
     return {"message": "Go to docs endpoint"}
 
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api/v1")
 
 
 
