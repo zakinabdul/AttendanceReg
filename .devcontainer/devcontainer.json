@@ -1,0 +1,31 @@
+{
+    "name": "AttendanceReg_Backend",
+    "dockerComposeFile": [
+        "docker-compose.dev.yml"
+    ],
+    "service": "app",
+    "workspaceFolder": "/workspace/backend",
+    "remoteUser": "root",
+    "shutdownAction": "stopCompose",
+    "runServices": ["app", "db"],
+    
+    // THIS INSTALLS THE DOCKER CLI TOOL AND Common utils INSIDE THE CONTAINER
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": "true",
+            "installOhMyZsh": "true",
+            "upgradePackages": "true"
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "moby": false
+        }
+    },
+    // Vs code extension for docker
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    }
+}

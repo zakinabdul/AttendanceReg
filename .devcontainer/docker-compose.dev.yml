@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    image: attendance_backend:dev
+    restart: unless-stopped
+    env_file: ../backend/envs/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ..:/workspace
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    env_file: ../backend/envs/.env
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

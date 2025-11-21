@@ -1,0 +1,9 @@
+services:
+  api:
+    build: .
+    container_name: fastapi_app
+    restart: always
+    env_file: 
+      - envs/.env.prod
+    ports:
+      - "8000:8000"
