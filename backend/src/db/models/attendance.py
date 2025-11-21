@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, CheckConstraint, Column, Integer, String, ForeignKey
 from src.db.base import Base
-from sqlalchemy import Enum, DateTime
+from sqlalchemy import Enum, DateTime, Time, Date
 from sqlalchemy.sql import func
 
 class attendance_session(Base):
@@ -11,7 +11,7 @@ class attendance_session(Base):
     subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False, index=True)
     teacher_id = Column(Integer, ForeignKey("teachers.teacher_id"), nullable=False, index=True)
     period_id = Column(Integer, nullable=False, index=True)
-    session_date = Column(String, nullable=False, index=True)
+    session_date = Column(Date, nullable=False, index=True)
     status = Column(Boolean, default=False)  # True if session is completed
     
 class attendance_record(Base):
@@ -28,9 +28,9 @@ class period(Base):
     
     period_id = Column(Integer, primary_key=True, index=True)
     period_number = Column(Integer, nullable=False)
-    start_time = Column(String, nullable=True)
-    end_time = Column(String, nullable=True)
-    
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+
     __table_args__ = (
         CheckConstraint('period_number >= 1 AND period_number <= 7', name='check_period_number'),
     )

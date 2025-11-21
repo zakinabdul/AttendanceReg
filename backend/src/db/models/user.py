@@ -18,7 +18,7 @@ class Teacher(Base):
     __tablename__ = "teachers"
 
     teacher_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=True)
     employee_id = Column(String, unique=True, nullable=False, index=True)
     department = Column(String, nullable=True, index=True)
@@ -51,6 +51,6 @@ class Student(Base):
     course = Column(String, nullable=False, index=True)
     semester = Column(Integer, nullable=False, index=True)
     class_id = Column(Integer, ForeignKey("classes.class_id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     
     user = relationship("User", back_populates="student")

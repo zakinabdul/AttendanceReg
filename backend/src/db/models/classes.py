@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 class Class(Base):
     __tablename__ = "classes"
 
-    class_id = Column(Integer, primary_key=True, index=True)
+    class_id = Column(Integer , primary_key=True, index=True)
     department = Column(String, nullable=False, index=True)
     semester = Column(Integer, nullable=False, index=True)
     section = Column(String, nullable=False, index=True)

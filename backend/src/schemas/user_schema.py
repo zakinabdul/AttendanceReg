@@ -49,3 +49,7 @@ class StudentResponse(StudentBase):
 class UserLoginBase(BaseModel):
     user_name: str
     password: str
+    
+# schema for student attendance view
+class StudentAttendanceBae(BaseModel):
+    student_id: str
