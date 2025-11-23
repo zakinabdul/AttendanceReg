@@ -11,6 +11,13 @@ router = APIRouter(
 
 @router.post("/student_list", status_code=status.HTTP_201_CREATED)
 async def students_list(data: class_schema.ClassCreate, db: DatabaseSession):
+    """
+    {
+     "department": "Computer Science and Engineering",
+     "semester": 1,
+     "section": "B"
+    }
+    """
     department = data.department
     semester = data.semester
     section = data.section
