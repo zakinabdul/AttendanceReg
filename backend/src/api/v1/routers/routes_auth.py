@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from src.schemas import user_schema 
 from src.db.models import user,classes
 from src.core.logger import logger
+from sqlalchemy import select
 router = APIRouter(
     prefix="/auth",
    tags=["auth"]
@@ -29,6 +30,8 @@ async def user_creation(data: user_schema.UserCreate, db: DatabaseSession):
         role=data.role
     )
     db.add(new_user)
+    await db.flush()
+    
     #db.commit()
     #db.refresh(new_user)
     logger.info("Successfully added basic user details")
@@ -39,12 +42,18 @@ async def user_creation(data: user_schema.UserCreate, db: DatabaseSession):
             raise HTTPException(status_code=400, detail="Student Register Number required")
         
         
-        student = db.query(user.Student).filter(user.Student.register_number==reg_number).first()
+        query = select(user.Student).filter(user.Student.register_number==reg_number)
+        # 4. EXECUTE & FETCH
+        result = await db.execute(query)
+        student = result.scalars().first()
+        
         #logger.info(f"the student id: {student.student_id}")
         if not student:
+            await db.rollback()
             raise HTTPException(status_code=400, detail="No record of that student")
         
         if student.user_id is not None:
+            await db.rollback()
             raise HTTPException(status_code=400, detail="User already linked to this register number")
 
         student.user_id = new_user.user_id
@@ -56,22 +65,27 @@ async def user_creation(data: user_schema.UserCreate, db: DatabaseSession):
         if not emp_id:
             return HTTPException(status_code=400, detail="Teacher Employee ID is required")
         
-        teacher = db.query(user.Teacher).filter(user.Teacher.employee_id==emp_id).first()
+        query = db.query(user.Teacher).filter(user.Teacher.employee_id==emp_id)
+        result = await db.execute(query)
+        teacher = result.scalars().first()
         #logger.info(f"teacher {teacher.teacher_id}")
         
         if not teacher:
+            await db.rollback()
             raise HTTPException(status_code=400, detail="No record of this teacher")
         
         if teacher.user_id is not None:
+            await db.rollback()
             raise HTTPException(status_code=400, detail="User Id already exist")
         
         teacher.user_id = new_user.user_id
         #db.commit()
     
     else:
+        await db.rollback()
         return HTTPException(status_code=400, detail="Invalid role type")
     
-    db.commit()
+    await db.commit()
     
     return {"message": f"{data.role.capitalize()} data created succesfully"}
         
@@ -83,10 +97,12 @@ async def login(data: user_schema.UserLoginBase, db: DatabaseSession):
     username = data.user_name
     password = data.password
     
-    user_info = db.query(user.User).filter(
+    query = select(user.User).where(
         (user.User.user_name == username)&
         (user.User.password_hash==password)
-    ).first()
+    )
+    result = await db.execute(query)
+    user_info = result.scalars().first()
     if user_info is None:
         raise HTTPException(status_code=400, detail="User not found")
     

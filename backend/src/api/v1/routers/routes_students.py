@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from src.api.deps import DatabaseSession
 from src.schemas import user_schema 
 from src.db.models import attendance
-from sqlalchemy import func
+from sqlalchemy import func, select
 router = APIRouter(
     prefix="/student",
    tags=["student"]
@@ -12,9 +12,11 @@ router = APIRouter(
 async def attendance_view(data: user_schema.StudentAttendanceBae, db: DatabaseSession):
     student_id = data.student_id
     
-    present_count  = db.query(func.count(attendance.attendance_record.record_id)).filter(
+    query  = select(func.count(attendance.attendance_record.record_id)).where(
         attendance.attendance_record.student_id==student_id
-    ).scalar()
+    )
+    result = await db.execute(query)
+    present_count = result.scalar()
 
     return {
         "student_id": student_id,

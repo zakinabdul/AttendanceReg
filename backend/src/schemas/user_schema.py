@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,List
 from .class_schema import ClassCreate
 #User schemas
 class UserBase(BaseModel):
@@ -40,6 +40,20 @@ class StudentResponse(StudentBase):
     user_id: Optional[int] = None
     student_id: int
 
+
+class StudentOut(BaseModel):
+    user_name: str
+    register_number: str
+    # Add other fields you want to show the frontend
+    
+    class Config:
+        from_attributes = True # This tells Pydantic to read from SQLAlchemy models
+
+# 2. Schema for the WHOLE response
+class StudentListResponse(BaseModel):
+    message: str
+    students: List[StudentOut] # A list of the schema above
+    session_id: int
     
     
 #UserCreate.model_rebuild()
