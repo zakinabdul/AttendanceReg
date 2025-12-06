@@ -2,4 +2,5 @@
 envs/
 logs/
 test.ipynb
+load_testing/
 

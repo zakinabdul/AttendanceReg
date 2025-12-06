@@ -4,7 +4,8 @@ from src.schemas import class_schema, user_schema, attendance_schema
 from src.db.models import user,classes, attendance
 from typing import List
 from datetime import date, datetime
-from sqlalchemy import update
+from sqlalchemy import update, select
+
 
 router = APIRouter(
     prefix="/teacher",
@@ -24,12 +25,11 @@ async def students_list(data: class_schema.ClassCreate, db: DatabaseSession):
     semester = data.semester
     section = data.section
     
-    query = select(classes.Class).where(
+    result = await db.execute(select(classes.Class).where(
         (classes.Class.department == department)& 
         (classes.Class.semester == semester) &
         (classes.Class.section == section)
-    )
-    result = await db.execute(query)
+    ))
     class_info = result.scalars().first()
 
     if not class_info:
@@ -38,30 +38,28 @@ async def students_list(data: class_schema.ClassCreate, db: DatabaseSession):
     class_id = class_info.class_id
     
     
-    query= select(user.Student).where(
+    result= await db.execute(select(user.Student).where(
         user.Student.class_id ==class_id
-    )
-    result = await db.execute(query)
+    ))
     students = result.scalars().all()
     # current date
     # to find the current period number
     current_timedate = datetime.now().time()
     
-    query = select(attendance.period).filter(
+    result = await db.execute(select(attendance.period).filter(
         (attendance.period.start_time <=current_timedate)&
         (attendance.period.end_time>=current_timedate)
-    )
-    result = await db.execute(query)
+    ))
     period_number = result.scalars().first()
     if period_number is None:
         raise HTTPException(status_code=400, detail="NO such period is found in the record")
+    
     today = date.today()
     
-    query = select(attendance.attendance_session).where(
+    result = await db.execute(select(attendance.attendance_session).where(
         (attendance.attendance_session.session_date == today) &
         (attendance.attendance_session.period_id ==period_number.period_id)
-    )
-    result = await db.execute(query)
+    ))
     session = result.scalars().first()
     if session is None:
         raise HTTPException(status_code=400, detail="The current session is not in reocrd")

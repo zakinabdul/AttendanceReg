@@ -12,10 +12,9 @@ router = APIRouter(
 async def attendance_view(data: user_schema.StudentAttendanceBae, db: DatabaseSession):
     student_id = data.student_id
     
-    query  = select(func.count(attendance.attendance_record.record_id)).where(
+    result = await db.execute(select(func.count(attendance.attendance_record.record_id)).where(
         attendance.attendance_record.student_id==student_id
-    )
-    result = await db.execute(query)
+    ))
     present_count = result.scalar()
 
     return {

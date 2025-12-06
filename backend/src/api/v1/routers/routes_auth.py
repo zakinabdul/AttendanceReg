@@ -4,6 +4,7 @@ from src.schemas import user_schema
 from src.db.models import user,classes
 from src.core.logger import logger
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 router = APIRouter(
     prefix="/auth",
    tags=["auth"]
@@ -22,29 +23,38 @@ async def user_creation(data: user_schema.UserCreate, db: DatabaseSession):
   "employee_id": "EMP1007"
   }
     """
-    logger.debug(f"Received data {data.dict()}")
-    new_user = user.User(
-        user_name=data.user_name,
-        email = data.email,
-        password_hash=data.password,
-        role=data.role
-    )
-    db.add(new_user)
-    await db.flush()
+    try:
+        logger.debug(f"Received data {data.dict()}")
+        new_user = user.User(
+         user_name=data.user_name,
+         email = data.email,
+         password_hash=data.password,
+         role=data.role
+        )
+        db.add(new_user)
+        await db.flush()
     
-    #db.commit()
-    #db.refresh(new_user)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Username or email already exist"
+        )
+    
+    
     logger.info("Successfully added basic user details")
+    
     if data.role=="student":
         reg_number = data.register_number
         #logger.info(f"register number entered: {reg_number}")
         if not reg_number:
+            await db.rollback()
             raise HTTPException(status_code=400, detail="Student Register Number required")
         
         
-        query = select(user.Student).filter(user.Student.register_number==reg_number)
+        
+        result =await db.execute(select(user.Student).filter(user.Student.register_number==reg_number))
         # 4. EXECUTE & FETCH
-        result = await db.execute(query)
         student = result.scalars().first()
         
         #logger.info(f"the student id: {student.student_id}")
@@ -57,16 +67,19 @@ async def user_creation(data: user_schema.UserCreate, db: DatabaseSession):
             raise HTTPException(status_code=400, detail="User already linked to this register number")
 
         student.user_id = new_user.user_id
-        #db.commit()
+        
         
     elif data.role=="teacher":
         emp_id = data.employee_id
         logger.info(f"employee id entered {emp_id}")
         if not emp_id:
-            return HTTPException(status_code=400, detail="Teacher Employee ID is required")
+            await db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail="Teacher Employee ID is required"
+                )
         
-        query = db.query(user.Teacher).filter(user.Teacher.employee_id==emp_id)
-        result = await db.execute(query)
+        result = await db.execute(select(user.Teacher).where(user.Teacher.employee_id==emp_id))
         teacher = result.scalars().first()
         #logger.info(f"teacher {teacher.teacher_id}")
         
@@ -79,7 +92,6 @@ async def user_creation(data: user_schema.UserCreate, db: DatabaseSession):
             raise HTTPException(status_code=400, detail="User Id already exist")
         
         teacher.user_id = new_user.user_id
-        #db.commit()
     
     else:
         await db.rollback()
@@ -97,11 +109,10 @@ async def login(data: user_schema.UserLoginBase, db: DatabaseSession):
     username = data.user_name
     password = data.password
     
-    query = select(user.User).where(
+    result = await db.execute(select(user.User).where(
         (user.User.user_name == username)&
         (user.User.password_hash==password)
-    )
-    result = await db.execute(query)
+    ))
     user_info = result.scalars().first()
     if user_info is None:
         raise HTTPException(status_code=400, detail="User not found")

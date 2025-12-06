@@ -11,14 +11,12 @@ router = APIRouter(
 
 @router.get("/get_all_user")
 async def get_all_users(db: DatabaseSession):
-    query = select(user.User)
-    result = await db.execute(query)
+    result = await db.execute(select(user.User))
     users = result.scalars().all()
     return users
 
 @router.get("/get_all_student")
 async def get_all_students(db: DatabaseSession):
-    query = select(user.Student)
-    result = await db.execute(query)
+    result = await db.execute(select(user.Student))
     students = result.scalars().all()
     return students
